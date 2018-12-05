@@ -23,3 +23,16 @@ class Sy9MovieItemDetail(scrapy.Item):
     url = scrapy.Field()
     imgUrl = scrapy.Field()
     description = scrapy.Field()
+
+
+class MeBookItem(scrapy.Item):
+    title = scrapy.Field()
+    url = scrapy.Field()
+    cover = scrapy.Field()
+    publishDate = scrapy.Field()
+
+
+class MeBootDetail(scrapy.Item):
+    url = scrapy.Field()
+    describe = scrapy.Field()
+    downloadUrl = scrapy.Field()
