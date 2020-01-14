@@ -17,3 +17,7 @@ func init() {
 		panic(err)
 	}
 }
+
+func GetDB() *mgo.Database {
+	return dataBase
+}

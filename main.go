@@ -3,14 +3,16 @@ package main
 import (
 	"fmt"
 	"github.com/gocolly/colly"
+	"github.com/ledboot/tilde/initial"
 	"github.com/ledboot/tilde/logger"
+	"github.com/ledboot/tilde/models"
+	"gopkg.in/mgo.v2/bson"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func main() {
-	// Instantiate default collector
 	total := getPageNum()
 	logger.Infof("total page num : %d", total)
 	getItem(total)
@@ -41,35 +43,24 @@ func getItem(total int) {
 		RandomDelay: 15 * time.Second,
 	})
 
-	//storage := &redisstorage.Storage{
-	//	Address:  "127.0.0.1:36379",
-	//	Password: "",
-	//	DB:       0,
-	//	Prefix:   "sy9d",
-	//}
-	//err := c.SetStorage(storage)
-	//if err != nil {
-	//	logger.Error(err)
-	//	panic(err)
-	//}
-
-	// On every a element which has href attribute call callback
 	c.OnHTML("table#threadlisttableid", func(e *colly.HTMLElement) {
 		e.ForEach("tbody", func(i int, element *colly.HTMLElement) {
 			if strings.Contains(element.Attr("id"), "normalthread") {
 				href := element.ChildAttr("div.tl_ct>a.s", "href")
 				title := element.ChildText("div.tl_ct>a")
-				logger.Infof(title + "->>" + href)
+				item := &models.Sy9d{
+					Id:    bson.NewObjectId(),
+					Title: title,
+					Url:   href,
+				}
+				err := initial.GetDB().C("sy9d").Insert(item)
+				logger.Error(err)
 			}
 		})
 	})
 
-	//q, _ := queue.New(2, &queue.InMemoryQueueStorage{MaxSize: 10000})
-
 	for i := 1; i <= total; i++ {
 		c.Visit(fmt.Sprintf("%s%d", pageUrl, i))
-		//q.AddURL(fmt.Sprintf("%s%d", pageUrl, i))
 	}
-	//q.Run(c)
 	c.Wait()
 }
