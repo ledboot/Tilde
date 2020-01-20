@@ -1,21 +1,26 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
+	"github.com/astaxie/beego"
 	"github.com/gocolly/colly"
 	"github.com/ledboot/tilde/initial"
 	"github.com/ledboot/tilde/logger"
 	"github.com/ledboot/tilde/models"
-	"gopkg.in/mgo.v2/bson"
+	_ "github.com/ledboot/tilde/routers"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func main() {
-	total := getPageNum()
-	logger.Infof("total page num : %d", total)
-	getItem(total)
+
+	beego.Run()
+	//total := getPageNum()
+	//logger.Infof("total page num : %d", total)
+	//getItem(total)
 }
 
 func getPageNum() int {
@@ -48,19 +53,29 @@ func getItem(total int) {
 			if strings.Contains(element.Attr("id"), "normalthread") {
 				href := element.ChildAttr("div.tl_ct>a.s", "href")
 				title := element.ChildText("div.tl_ct>a")
-				item := &models.Sy9d{
-					Id:    bson.NewObjectId(),
-					Title: title,
-					Url:   href,
+				sum := sha1.Sum([]byte(href))
+				hash := hex.EncodeToString(sum[:])
+				count, _ := initial.GetMongoDB().C("sy9d").Find(fmt.Sprintf("hash=%s", hash)).Count()
+				if count == 0 {
+					item := &models.Sy9d{
+						Hash:  hash,
+						Title: title,
+						Url:   href,
+					}
+					err := initial.GetMongoDB().C("sy9d").Insert(item)
+					if err != nil {
+						logger.Error(err)
+					}
 				}
-				err := initial.GetDB().C("sy9d").Insert(item)
-				logger.Error(err)
+
 			}
 		})
 	})
 
-	for i := 1; i <= total; i++ {
-		c.Visit(fmt.Sprintf("%s%d", pageUrl, i))
-	}
+	c.Visit(fmt.Sprintf("%s%d", pageUrl, 1))
+
+	//for i := 1; i <= total; i++ {
+	//	c.Visit(fmt.Sprintf("%s%d", pageUrl, i))
+	//}
 	c.Wait()
 }
