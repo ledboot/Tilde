@@ -1,4 +1,4 @@
-module github.com/ledboot/tilde
+module github.com/ledboot/Tilde
 
 go 1.13
 

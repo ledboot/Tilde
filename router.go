@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/ledboot/tilde/api"
+	"github.com/ledboot/Tilde/api"
 )
 
 func init() {
